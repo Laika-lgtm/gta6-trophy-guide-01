@@ -1,179 +1,153 @@
-// Boot and wiring for the GTA VI trophy guide & tracker.
+// Boot + router + toolbar wiring. Keeps no data of its own.
 import { loadData } from "./data.js";
-import {
-  loadState,
-  saveState,
-  setEarned,
-  exportState,
-  importState,
-  resetState,
-} from "./store.js";
-import {
-  renderTrophies,
-  renderProgress,
-  renderRoadmap,
-  renderSources,
-  renderAudit,
-} from "./views.js";
+import { loadState, saveState, demoState, toggleEarned, bumpCounter, earnedCount, loggedTotal } from "./store.js";
+import { computeAudit, auditStripHtml } from "./audit.js";
+import { renderTracker, renderRoadmap, renderMissables, renderSources } from "./views.js";
 
-const $ = (id) => document.getElementById(id);
+let data = null;
+let state = null;
+let selected = 28;
+let tab = "tracker";
+let query = "";
+let kind = "";
+let grade = "";
 
-async function main() {
-  const { trophies, meta } = await loadData();
-  let state = loadState();
+const view = document.getElementById("view");
+const auditStrip = document.getElementById("auditStrip");
+const earnedCountEl = document.getElementById("earnedCount");
+const earnedBarEl = document.getElementById("earnedBar");
+const loggedCountEl = document.getElementById("loggedCount");
 
-  const listEl = $("trophy-list");
-  const countEl = $("result-count");
-  const emptyEl = $("empty-state");
-  const fillEl = $("progress-fill");
-  const textEl = $("progress-text");
-  const searchEl = $("search");
-  const hideEarnedEl = $("hide-earned");
-  const spoilerEl = $("spoiler");
+function refreshChrome() {
+  const a = computeAudit(data, state);
+  auditStrip.innerHTML = auditStripHtml(a);
+  earnedCountEl.textContent = a.earned;
+  earnedBarEl.style.width = `${(a.earned / a.total) * 100}%`;
+  loggedCountEl.textContent = `${a.logged} collectibles logged`;
+  document.title = `LEONIDA Trophy Guide: 55 trophies, ${a.claims} cited claims, ${a.twoPlus} backed by 2+ sources, ${a.pages} sources read, count trackers, chapter missable grid`;
+}
 
-  // Restore saved toolbar state into the controls.
-  searchEl.value = state.search;
-  hideEarnedEl.checked = state.hideEarned;
-  spoilerEl.checked = state.spoiler;
-  document.querySelectorAll("#kind-chips .chip").forEach((chip) => {
-    chip.classList.toggle("active", chip.dataset.kind === state.kind);
-  });
-  document.querySelectorAll("#grade-chips .chip").forEach((chip) => {
-    chip.classList.toggle("active", chip.dataset.grade === state.grade);
-  });
+function render() {
+  document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("active", el.dataset.tab === tab));
+  if (tab === "roadmap") view.innerHTML = renderRoadmap(data);
+  else if (tab === "missables") view.innerHTML = renderMissables(data);
+  else if (tab === "sources") view.innerHTML = renderSources(data);
+  else view.innerHTML = renderTracker(data, state, { selected, query, kind, grade });
+}
 
-  function renderAll() {
-    renderTrophies(trophies, state, listEl, countEl, emptyEl);
-    renderProgress(state, trophies.length, fillEl, textEl);
-  }
+function rerender() {
+  refreshChrome();
+  render();
+}
 
-  // Tabs.
-  document.querySelectorAll(".tab").forEach((tab) => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-      tab.classList.add("active");
-      document.querySelectorAll(".view").forEach((view) => {
-        view.hidden = view.id !== `view-${tab.dataset.view}`;
-        view.classList.toggle("active", view.id === `view-${tab.dataset.view}`);
-      });
-    });
-  });
-
-  // Toolbar: search, kind and grade chips, hide-earned and spoiler toggles.
-  searchEl.addEventListener("input", () => {
-    state = { ...state, search: searchEl.value };
-    saveState(state);
-    renderAll();
-  });
-  document.querySelectorAll("#kind-chips .chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      document.querySelectorAll("#kind-chips .chip").forEach((c) => c.classList.remove("active"));
-      chip.classList.add("active");
-      state = { ...state, kind: chip.dataset.kind };
-      saveState(state);
-      renderAll();
-    });
-  });
-  document.querySelectorAll("#grade-chips .chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      document.querySelectorAll("#grade-chips .chip").forEach((c) => c.classList.remove("active"));
-      chip.classList.add("active");
-      state = { ...state, grade: chip.dataset.grade };
-      saveState(state);
-      renderAll();
-    });
-  });
-  hideEarnedEl.addEventListener("change", () => {
-    state = { ...state, hideEarned: hideEarnedEl.checked };
-    saveState(state);
-    renderAll();
-  });
-  spoilerEl.addEventListener("change", () => {
-    state = { ...state, spoiler: spoilerEl.checked };
-    saveState(state);
-    renderAll();
-  });
-
-  // Earned checkboxes and "show guide" toggles (event delegation — the list re-renders).
-  listEl.addEventListener("change", (event) => {
-    const box = event.target.closest("[data-earn]");
-    if (!box) return;
-    state = setEarned(state, Number(box.dataset.earn), box.checked);
-    renderAll();
-  });
-  listEl.addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-toggle]");
-    if (!btn) return;
-    const card = btn.closest(".card");
-    const wrap = card.querySelector(".steps-wrap");
-    const open = wrap.hidden;
-    wrap.hidden = !open;
-    btn.setAttribute("aria-expanded", String(open));
-    btn.textContent = open ? "Hide numbered guide" : "Show numbered guide";
-  });
-
-  // Export / import / reset.
-  $("export-btn").addEventListener("click", () => exportState(state));
-  $("import-file").addEventListener("change", async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    try {
-      state = await importState(file);
-      searchEl.value = state.search;
-      hideEarnedEl.checked = state.hideEarned;
-      spoilerEl.checked = state.spoiler;
-      renderAll();
-    } catch (err) {
-      alert(err.message);
-    }
-    event.target.value = "";
-  });
-  $("reset-btn").addEventListener("click", () => {
-    if (!confirm("Reset all progress? This clears every trophy you marked earned.")) return;
-    state = resetState();
-    searchEl.value = "";
-    hideEarnedEl.checked = false;
-    spoilerEl.checked = false;
-    document.querySelectorAll("#kind-chips .chip").forEach((c) => {
-      c.classList.toggle("active", c.dataset.kind === "all");
-    });
-    document.querySelectorAll("#grade-chips .chip").forEach((c) => {
-      c.classList.toggle("active", c.dataset.grade === "all");
-    });
-    renderAll();
-  });
-
-  renderRoadmap(meta, $("roadmap"), $("checklist100"));
-  renderSources(meta, document.querySelector("#source-table tbody"), $("disagreements"));
-  renderAudit(trophies, meta, $("audit"));
-  renderAll();
-
-  // Deep links: #roadmap, #sources and #audit switch tabs; #trophy-<id>
-  // opens that trophy's numbered guide on the checklist and scrolls to it.
-  // Useful for sharing a link to one trophy's method.
-  const hash = location.hash.replace(/^#/, "");
-  if (["roadmap", "sources", "audit"].includes(hash)) {
-    document.querySelector(`.tab[data-view="${hash}"]`).click();
-    document.querySelector("main").scrollIntoView();
-  } else {
-    const match = hash.match(/^trophy-(\d+)$/);
-    if (match) {
-      const card = listEl.querySelector(`.card[data-id="${match[1]}"]`);
-      if (card) {
-        const wrap = card.querySelector(".steps-wrap");
-        const btn = card.querySelector("[data-toggle]");
-        if (wrap && btn) {
-          wrap.hidden = false;
-          btn.setAttribute("aria-expanded", "true");
-          btn.textContent = "Hide numbered guide";
-        }
-        card.scrollIntoView();
-      }
-    }
+function goToTab(next, anchor) {
+  tab = next;
+  location.hash = next;
+  rerender();
+  if (anchor) {
+    const el = document.getElementById(anchor);
+    if (el) el.scrollIntoView({ block: "center" });
   }
 }
 
-main().catch((err) => {
-  document.getElementById("trophy-list").innerHTML =
-    `<p class="empty-state">The guide data could not be loaded: ${err.message}</p>`;
-});
+function initRouter() {
+  const read = () => {
+    const h = location.hash.replace(/^#/, "");
+    tab = ["tracker", "roadmap", "missables", "sources"].includes(h) ? h : "tracker";
+    rerender();
+  };
+  window.addEventListener("hashchange", read);
+  read();
+}
+
+function initToolbar() {
+  const search = document.getElementById("searchBox");
+  const kindSel = document.getElementById("kindFilter");
+  const gradeSel = document.getElementById("gradeFilter");
+  const hideBox = document.getElementById("hideEarned");
+  const spoilerBox = document.getElementById("spoilerToggle");
+  hideBox.checked = state.hideEarned;
+  spoilerBox.checked = state.spoiler;
+  search.addEventListener("input", () => { query = search.value; tab = "tracker"; render(); });
+  kindSel.addEventListener("change", () => { kind = kindSel.value; tab = "tracker"; render(); });
+  gradeSel.addEventListener("change", () => { grade = gradeSel.value; tab = "tracker"; render(); });
+  hideBox.addEventListener("change", () => { state.hideEarned = hideBox.checked; saveState(state); render(); });
+  spoilerBox.addEventListener("change", () => { state.spoiler = spoilerBox.checked; saveState(state); render(); });
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "leonida-trophy-progress.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("importFile").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      state = { ...state, ...parsed, earned: parsed.earned || {}, counters: parsed.counters || {} };
+      saveState(state);
+      hideBox.checked = state.hideEarned;
+      spoilerBox.checked = state.spoiler;
+      rerender();
+    } catch {
+      auditStrip.textContent = "That file was not a valid progress export — nothing was changed.";
+    }
+    e.target.value = "";
+  });
+}
+
+function initClicks() {
+  view.addEventListener("click", (e) => {
+    // Citation links: switch to the Sources tab and jump to the source.
+    const cite = e.target.closest("a[data-src]");
+    if (cite) {
+      e.preventDefault();
+      goToTab("sources", `src-${cite.dataset.src}`);
+      return;
+    }
+    // Counter +/- buttons.
+    const cb = e.target.closest("button[data-counter]");
+    if (cb) {
+      bumpCounter(state, cb.dataset.counter, Number(cb.dataset.delta));
+      refreshChrome();
+      render();
+      return;
+    }
+    // Earned checkboxes inside rows (stop the row click from also selecting).
+    const eb = e.target.closest("input[data-earned]");
+    if (eb) {
+      e.stopPropagation();
+      toggleEarned(state, Number(eb.dataset.earned));
+      refreshChrome();
+      render();
+      return;
+    }
+    // Trophy row selection.
+    const row = e.target.closest("[data-trophy]");
+    if (row) {
+      selected = Number(row.dataset.trophy);
+      render();
+    }
+  });
+}
+
+async function boot() {
+  try {
+    data = await loadData();
+  } catch (err) {
+    view.innerHTML = `<p>Could not load the guide data. ${err.message} — the app needs its own data files in app/data/.</p>`;
+    return;
+  }
+  state = new URLSearchParams(location.search).get("demo") === "1" ? demoState() : loadState();
+  if (new URLSearchParams(location.search).get("demo") === "1") saveState(state);
+  initToolbar();
+  initClicks();
+  initRouter();
+}
+
+boot();

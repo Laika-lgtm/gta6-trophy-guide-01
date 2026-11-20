@@ -1,223 +1,187 @@
-// Rendering for the GTA VI trophy guide.
-// Spoiler rule (hard): when spoiler mode is on, a hidden trophy that has not
-// been earned yet shows NO name and NO description — only "Hidden trophy".
-// The search must not leak either: a hidden, unearned trophy can only be
-// found by its grade, kind or id, never by its hidden name or description.
-// Earned trophies are never spoilers — you already have them.
+// View renderers: each tab is pure HTML built from the data.
+// Nothing here fetches anything; nothing here knows about localStorage.
+import { citeMarks, esc, sourceName, sourceDomain } from "./data.js";
 
-// Grade labels shown on cards.
-const GRADE_LABEL = {
-  platinum: "Platinum",
-  gold: "Gold",
-  silver: "Silver",
-  bronze: "Bronze",
+// Trophy id -> count-tracker id (only trophies with a live counter).
+const COUNTER_FOR = {
+  15: "stunts", 17: "rangeGolds", 18: "droneTrials", 19: "racesWon",
+  21: "videogames", 28: "meditations", 30: "cardsets", 31: "waink",
+  32: "challenges", 35: "vehicles",
 };
+
+// Roadmap order for the Next Up panel: the order a player should earn them.
+const NEXT_UP = [28, 2, 20, 23, 8, 24, 29, 54, 55, 26, 27, 22, 3, 9, 10, 11, 12,
+  33, 34, 39, 40, 52, 14, 15, 16, 17, 18, 19, 21, 30, 31, 32, 35, 36, 37, 38,
+  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 53, 4, 5, 6, 7, 13, 25];
 
 const KIND_LABEL = {
-  story: "Story",
-  side: "Side",
-  collectibles: "Collectibles",
-  activities: "Activities",
-  crime: "Crime",
-  exploration: "Exploration",
+  story: "Story", strangers: "Strangers", activities: "Activity",
+  collectibles: "Collectible", crime: "Crime", money: "Money",
+  hidden: "Hidden", platinum: "Platinum",
 };
 
-function esc(text) {
-  return String(text)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+export function spoilerHidden(t, state) {
+  return state.spoiler && t.kind === "story" && !state.earned[t.id] && t.grade !== "platinum";
 }
 
-export function isSpoilerHidden(trophy, state) {
-  return state.spoiler && trophy.hidden && !state.earned[trophy.id];
-}
-
-// The text a trophy may be searched by. In spoiler mode the hidden name and
-// description are excluded, so searching for a story trophy's name finds
-// nothing until it is earned.
-export function searchableText(trophy, state) {
-  const parts = [String(trophy.id), GRADE_LABEL[trophy.grade], KIND_LABEL[trophy.kind]];
-  if (!isSpoilerHidden(trophy, state)) {
-    parts.push(trophy.name, trophy.description);
-  }
-  return parts.join(" ").toLowerCase();
-}
-
-export function filterTrophies(trophies, state) {
-  const q = state.search.trim().toLowerCase();
-  return trophies.filter((t) => {
-    if (state.kind !== "all" && t.kind !== state.kind) return false;
-    if (state.grade !== "all" && t.grade !== state.grade) return false;
+export function filteredTrophies(data, state, query, kind, grade) {
+  const q = (query || "").toLowerCase();
+  return data.trophies.trophies.filter((t) => {
     if (state.hideEarned && state.earned[t.id]) return false;
-    if (q && !searchableText(t, state).includes(q)) return false;
+    if (kind && t.kind !== kind) return false;
+    if (grade && t.grade !== grade) return false;
+    if (q && !(t.name.toLowerCase().includes(q) || t.description.toLowerCase().includes(q))) return false;
     return true;
   });
 }
 
-function badge(grade) {
-  return `<span class="badge ${grade}">${GRADE_LABEL[grade]}</span>`;
+function trophyRow(t, state, selected) {
+  const done = !!state.earned[t.id];
+  const hidden = spoilerHidden(t, state);
+  const name = hidden ? "Story trophy — hidden until earned" : esc(t.name);
+  const desc = hidden ? "Spoiler-safe mode is on." : esc(t.description);
+  const counter = COUNTER_FOR[t.id];
+  return `<button type="button" class="trow${done ? " done" : ""}${selected === t.id ? " sel" : ""}" data-trophy="${t.id}">
+    <input type="checkbox" ${done ? "checked" : ""} data-earned="${t.id}" aria-label="Mark ${esc(t.name)} earned" tabindex="-1">
+    <span class="tinfo">
+      <span class="tname">${name}</span>
+      <span class="tdesc">${desc}</span>
+      <span class="tmeta">
+        <span class="grade ${t.grade}">${t.grade.toUpperCase()}</span>
+        <span class="kind">${KIND_LABEL[t.kind] || t.kind}</span>
+        ${t.hidden ? '<span class="flag">HIDDEN</span>' : ""}
+        ${t.missable ? '<span class="flag">⚠ POSSIBLY MISSABLE</span>' : ""}
+        ${counter ? `<span class="cnt">${esc(counterLabel(counter))}</span>` : ""}
+      </span>
+    </span>
+  </button>`;
 }
 
-function stepsHtml(trophy) {
-  const items = trophy.steps
-    .map(
-      (step) =>
-        `<li>${esc(step.t)}<span class="src">Source: ${esc(step.s)}</span></li>`,
-    )
-    .join("");
-  return `<ol class="steps">${items}</ol>`;
+function counterLabel(id) {
+  return id.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase());
 }
 
-function cardHtml(trophy, state) {
-  const earned = Boolean(state.earned[trophy.id]);
-  const hidden = isSpoilerHidden(trophy, state);
-  const title = hidden ? "Hidden trophy" : esc(trophy.name);
-  const desc = hidden
-    ? "Hidden — earn this trophy in the game to reveal it. (Spoiler mode is on.)"
-    : esc(trophy.description);
-  const count = trophy.count
-    ? ` · Target: ${trophy.count.toLocaleString("en-US")}${trophy.target100 ? ` (${trophy.target100.toLocaleString("en-US")} for 100%)` : ""}`
-    : "";
-  const badges = [
-    badge(trophy.grade),
-    `<span class="badge kind">${KIND_LABEL[trophy.kind]}</span>`,
-    trophy.hidden ? `<span class="badge hidden">Hidden</span>` : "",
-    trophy.missable ? `<span class="badge missable">⚠ Missable</span>` : "",
-    trophy.id === 49 ? `<span class="badge unconfirmed">Unconfirmed</span>` : "",
-  ].join("");
-  const callout = trophy.missable
-    ? `<p class="callout"><strong>Only possibly missable trophy.</strong> The Chapter 1 balcony meditation is lost permanently after Chapter 1 ends — do it before finishing Chapter 1.</p>`
-    : "";
-  const unconfirmedCallout =
-    trophy.id === 49
-      ? `<p class="callout"><strong>Method unconfirmed.</strong> No published guide has verified how this unlocks. This guide will not invent a method — check back after a method is confirmed.</p>`
-      : "";
-  return `<article class="card${earned ? " earned" : ""}" id="trophy-${trophy.id}" data-id="${trophy.id}">
-    <div class="card-head">
-      <input type="checkbox" data-earn="${trophy.id}" ${earned ? "checked" : ""} aria-label="Mark ${hidden ? "hidden trophy" : esc(trophy.name)} as earned">
-      <div class="card-title">
-        <h3>${title}</h3>
-        <p>${desc}${count}</p>
-        <div class="badges">${badges}</div>
-      </div>
+export function renderTracker(data, state, opts) {
+  const list = filteredTrophies(data, state, opts.query, opts.kind, opts.grade);
+  const selected = data.trophyById.get(opts.selected) || data.trophyById.get(28);
+  const rows = list.map((t) => trophyRow(t, state, selected.id)).join("");
+  return `<div class="tracker">
+    <div class="tlist">
+      <div class="tlist-head">${list.length} of ${data.trophies.trophies.length} trophies shown · tick the box when you earn one</div>
+      ${rows || '<div class="tlist-head">Nothing matches those filters.</div>'}
     </div>
-    ${hidden ? "" : `<p class="guide-summary">${esc(trophy.guide)}</p>${callout}${unconfirmedCallout}
-    <button type="button" class="details-toggle" data-toggle="${trophy.id}" aria-expanded="false">Show numbered guide</button>
-    <div class="steps-wrap" hidden>${stepsHtml(trophy)}</div>`}
-  </article>`;
+    <div class="detail">${renderDetail(data, state, selected)}</div>
+  </div>`;
 }
 
-export function renderTrophies(trophies, state, listEl, countEl, emptyEl) {
-  const shown = filterTrophies(trophies, state);
-  listEl.innerHTML = shown.map((t) => cardHtml(t, state)).join("");
-  countEl.textContent = `Showing ${shown.length} of ${trophies.length} trophies · ${Object.keys(state.earned).length} earned`;
-  emptyEl.hidden = shown.length !== 0;
+function renderDetail(data, state, t) {
+  const hidden = spoilerHidden(t, state);
+  const counterId = COUNTER_FOR[t.id];
+  const counter = counterId ? data.counts.counters.find((c) => c.id === counterId) : null;
+  const usedSources = [...new Set(t.claims.flatMap((c) => c.sources))].sort((a, b) => a - b);
+  const nextUp = NEXT_UP.filter((id) => !state.earned[id]).slice(0, 4)
+    .map((id) => data.trophyById.get(id)).filter(Boolean);
+
+  let html = `<h2>${hidden ? "Story trophy — hidden until earned" : esc(t.name)}</h2>`;
+  html += `<p class="desc">${hidden ? "Spoiler-safe mode hides story trophies you have not earned yet. Earn it, or turn spoiler-safe off." : esc(t.description)}</p>`;
+  html += `<div class="tags"><span class="pill ${t.grade}">${t.grade.toUpperCase()}</span>
+    <span class="muted">${KIND_LABEL[t.kind] || t.kind} · ${t.psnCount !== null && t.psnCount !== undefined ? `PSN: ${t.psnCount}% of players` : "no PSN rarity published"}</span>
+    ${t.hidden ? '<span class="flag">HIDDEN TROPHY</span>' : ""}</div>`;
+  if (t.missable) {
+    html += `<div class="notice danger"><b>⚠ Possibly missable.</b> The Chapter 1 balcony meditation with Lucia may be the one step in the whole game that cannot be redone. Do it the morning after Down to Earth, then save. Whether it is actually required is still unconfirmed — see the Missables tab.</div>`;
+  }
+  if (hidden) return html + nextUpHtml(nextUp);
+  html += `<h3>How to get it</h3><ol class="claims">`;
+  for (const c of t.claims) {
+    html += `<li><p>${esc(c.text)} ${citeMarks(data, c.sources)}</p></li>`;
+  }
+  html += `</ol>`;
+  if (counter) {
+    const cur = state.counters[counter.id] || 0;
+    html += `<h3>Count tracker</h3><div class="counter"><span class="clabel"><b>${esc(counter.label)}</b> — game total ${counter.target}${counter.trophyTarget !== null ? `, trophy needs ${counter.trophyTarget}` : ""}</span>
+      <span class="cbtns"><button type="button" data-counter="${counter.id}" data-delta="-1" aria-label="Decrease">−</button>
+      <span class="cval">${cur} / ${counter.target}</span>
+      <button type="button" data-counter="${counter.id}" data-delta="1" aria-label="Increase">+</button></span></div>`;
+  }
+  html += `<h3>Sources for this guide</h3><ol class="srclist">`;
+  for (const n of usedSources) {
+    html += `<li>[${n}] ${esc(sourceName(data, n))} — ${esc(sourceDomain(data, n))}</li>`;
+  }
+  html += `</ol>`;
+  html += nextUpHtml(nextUp);
+  return html;
 }
 
-export function renderProgress(state, total, fillEl, textEl) {
-  const earned = Object.keys(state.earned).length;
-  const pct = total ? Math.round((earned / total) * 100) : 0;
-  fillEl.style.width = `${pct}%`;
-  textEl.textContent = `${earned} / ${total} earned — ${pct}%`;
+function nextUpHtml(nextUp) {
+  if (!nextUp.length) return `<div class="nextup"><h3>Next up</h3><p>All 55 earned — the platinum is yours.</p></div>`;
+  return `<div class="nextup"><h3>Next up</h3><ol>${nextUp.map((t) => `<li><b>${esc(t.name)}</b> <span class="muted">(${KIND_LABEL[t.kind] || t.kind})</span></li>`).join("")}</ol></div>`;
 }
 
-export function renderRoadmap(meta, roadmapEl, checklistEl) {
-  roadmapEl.innerHTML = meta.roadmap
-    .map(
-      (stage) => `<div class="stage">
-        <h3>Stage ${stage.stage}: ${esc(stage.title)}</h3>
-        <p class="hours">${esc(stage.hours)}</p>
-        <p>${esc(stage.summary)}</p>
-        <ul>${stage.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
-      </div>`,
-    )
-    .join("");
-  checklistEl.innerHTML = `<table class="check-table">
-    <thead><tr><th>What counts</th><th>Needed for 100%</th></tr></thead>
-    <tbody>${meta.checklist100.rows
-      .map((row) => `<tr><td>${esc(row.category)}</td><td>${esc(row.required)}</td></tr>`)
-      .join("")}</tbody>
-  </table>
-  <p class="intro">Source: ${esc(meta.checklist100.source)}.</p>`;
+export function renderRoadmap(data) {
+  const cards = data.roadmap.stages.map((s) => `<section class="card">
+    <h3>${esc(s.title)}</h3><div class="hours">${esc(s.hours)}</div>
+    <ol>${s.steps.map((st) => `<li>${esc(st.text)} ${citeMarks(data, st.sources)}</li>`).join("")}</ol>
+  </section>`).join("");
+  return `<h2>Roadmap — five stages, in order</h2>
+  <p class="muted">Chapter 1 first, then the story, then the 100% checklist, then the stranger finales, then cleanup. Every step carries its sources.</p>
+  <div class="cards">${cards}</div>`;
 }
 
-export function renderSources(meta, tableBodyEl, disagreementsEl) {
-  tableBodyEl.innerHTML = meta.sources
-    .map(
-      (s) => `<tr>
-        <td><strong>${esc(s.name)}</strong></td>
-        <td>${esc(String(s.list))} / 55</td>
-        <td>${esc(String(s.methods))}</td>
-        <td>${esc(s.role)}</td>
-        <td><a href="${esc(s.url)}" target="_blank" rel="noopener">Visit</a></td>
-      </tr>`,
-    )
-    .join("");
-  disagreementsEl.innerHTML = meta.disagreements
-    .map(
-      (d) => `<div class="disagreement">
-        <h3>${esc(d.topic)}</h3>
-        <div class="sides">
-          <div class="side"><strong>${esc(d.sideA.source)}</strong>${esc(d.sideA.claim)}</div>
-          <div class="side"><strong>${esc(d.sideB.source)}</strong>${esc(d.sideB.claim)}</div>
-        </div>
-        <p class="verdict"><strong>Our take:</strong> ${esc(d.verdict)}</p>
-      </div>`,
-    )
-    .join("");
+export function renderMissables(data) {
+  const rows = data.missables.rows.map((r) => `<tr class="${r.status}">
+    <td><span class="st ${r.status}">${r.status === "possibly missable" ? "POSSIBLY MISSABLE" : r.status === "watch" ? "WATCH" : "SAFE"}</span></td>
+    <td><b>${esc(r.trophy)}</b></td><td>${esc(r.chapter)}</td>
+    <td>${esc(r.lastChance)}</td><td>${esc(r.note)}</td>
+    <td>${citeMarks(data, r.sources)}</td></tr>`).join("");
+  const gates = data.missables.gates.map((g) => `<section class="gate"><h4>${esc(g.chapter)}</h4>
+    <ul>${g.missions.map((m) => `<li><b>${esc(m.mission)}</b> → ${m.trophies.map(esc).join(", ")}</li>`).join("")}</ul>
+    <p class="muted">${esc(g.note)}</p></section>`).join("");
+  return `<h2>Missables — the chapter grid</h2>
+  <p class="muted">${esc(data.missables.atRiskNote)} The full list of 55 is in the Tracker; this tab is only the watch list.</p>
+  <table class="gridtable"><thead><tr><th>Status</th><th>Trophy / item</th><th>Chapter</th><th>Last chance</th><th>What happens</th><th>Sources</th></tr></thead>
+  <tbody>${rows}</tbody></table>
+  <h3>Story gates — where each trophy pops</h3>
+  <div class="gates">${gates}</div>`;
 }
 
-export function renderAudit(trophies, meta, auditEl) {
-  const totalSteps = trophies.reduce((n, t) => n + t.steps.length, 0);
-  const stepsWithSource = trophies.reduce(
-    (n, t) => n + t.steps.filter((s) => s.s && s.s.trim()).length,
-    0,
-  );
-  const missable = trophies.filter((t) => t.missable).map((t) => t.name);
-  const unconfirmed = trophies.filter((t) => t.id === 49).map((t) => t.name);
-  const gradeCounts = {};
-  for (const t of trophies) gradeCounts[t.grade] = (gradeCounts[t.grade] || 0) + 1;
-  const hiddenCount = trophies.filter((t) => t.hidden).length;
-  const items = [
-    {
-      ok: trophies.length === 55,
-      label: "55 trophies in the guide",
-      detail: `${trophies.length} trophies loaded; grades ${gradeCounts.platinum || 0} platinum / ${gradeCounts.gold || 0} gold / ${gradeCounts.silver || 0} silver / ${gradeCounts.bronze || 0} bronze; ${hiddenCount} hidden.`,
-    },
-    {
-      ok: stepsWithSource === totalSteps && totalSteps > 0,
-      label: "Every guide step cites a source",
-      detail: `${stepsWithSource} of ${totalSteps} steps carry a named source (PowerPyx, KeenGamer, EGamers).`,
-    },
-    {
-      ok: missable.length === 1,
-      label: "Exactly 1 missable trophy",
-      detail: missable.length === 1 ? missable[0] : `${missable.length} marked missable.`,
-    },
-    {
-      ok: unconfirmed.length === 1,
-      label: "Exactly 1 unconfirmed trophy",
-      detail: unconfirmed.length === 1 ? `${unconfirmed[0]} — method stated as unconfirmed, never invented.` : `${unconfirmed.length} marked unconfirmed.`,
-    },
-    {
-      ok: true,
-      label: "Spoiler mode never leaks",
-      detail: "Hidden, unearned trophies show no name or description, and search excludes their hidden text. Toggle spoiler mode on the Checklist tab to check.",
-    },
-    {
-      ok: true,
-      label: `Difficulty ${meta.difficulty.score}/${meta.difficulty.outOf}`,
-      detail: `Rated by ${meta.difficulty.sources.join(" and ")} — ${meta.difficulty.note}`,
-    },
-  ];
-  auditEl.innerHTML = items
-    .map(
-      (item) => `<div class="audit-item ${item.ok ? "pass" : "warn"}">
-        <span class="mark">${item.ok ? "✓" : "!"}</span>
-        <div><p><strong>${esc(item.label)}</strong></p><p class="detail">${esc(item.detail)}</p></div>
-      </div>`,
-    )
-    .join("");
+export function renderSources(data) {
+  // Heatmap: top 12 sources by claim usage, plus an "other" column.
+  const usage = new Map();
+  for (const t of data.trophies.trophies) {
+    for (const c of t.claims) for (const n of c.sources) usage.set(n, (usage.get(n) || 0) + 1);
+  }
+  const top = [...usage.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(([n]) => n);
+  const otherTotal = [...usage.entries()].filter(([n]) => !top.includes(n)).reduce((a, [, v]) => a + v, 0);
+
+  const head = `<tr><th class="rowh">Trophy</th>${top.map((n) => `<th>[${n}]</th>`).join("")}<th>oth</th></tr>`;
+  const body = data.trophies.trophies.map((t) => {
+    const cells = top.map((n) => {
+      const v = t.claims.reduce((a, c) => a + (c.sources.includes(n) ? 1 : 0), 0);
+      return `<td class="c${Math.min(v, 3)}">${v || ""}</td>`;
+    }).join("");
+    const other = t.claims.reduce((a, c) => a + c.sources.filter((n) => !top.includes(n)).length, 0);
+    return `<tr><td class="rowh">${esc(t.name)}</td>${cells}<td class="c${Math.min(other, 3)}">${other || ""}</td></tr>`;
+  }).join("");
+
+  const list = data.sources.sources.map((s) => {
+    const used = usage.get(s.n) || 0;
+    return `<li id="src-${s.n}"><span class="num">[${s.n}]</span> <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a> <span class="muted">— ${esc(s.kind)}, read ${esc(data.sources.readDate)}${used ? `, cited in ${used} claim${used === 1 ? "" : "s"}` : ", cited in roadmap/disputes"}</span></li>`;
+  }).join("");
+
+  const disputes = data.disputes.disputes.map((d) => `<section class="dispute"><h4>${esc(d.id)} — ${esc(d.title)}</h4>
+    <div class="sides"><div class="sideA"><b>Side A:</b> ${esc(d.sideA.text)} ${citeMarks(data, d.sideA.sources)}</div>
+    <div class="sideB"><b>Side B:</b> ${esc(d.sideB.text)} ${citeMarks(data, d.sideB.sources)}</div></div>
+    <div class="verdict"><b>What this guide does:</b> ${esc(d.verdict)} ${citeMarks(data, d.verdictSources)}</div></section>`).join("");
+
+  return `<h2>Sources — ${data.sources.sources.length} read, numbered in the order they appear</h2>
+  <div class="srcwrap">
+    <div><ol class="srclist-full">${list}</ol></div>
+    <div class="heatmap"><b>Trophy × source heatmap</b>
+      <p class="muted">Each cell is how many claims of that trophy cite that source. Top 12 sources shown; ${otherTotal} more citations sit in the "oth" column.</p>
+      <table>${head}${body}</table>
+      <p class="legend">Shading: blank = 0, light = 1, amber = 2, dark = 3+ claims.</p></div>
+  </div>
+  <h3>Disputes — ${data.disputes.disputes.length} places the guides disagree</h3>
+  <p class="muted">Where the sources conflict, both sides are shown and this guide says what it does and why. Unsettled items stay unsettled.</p>
+  ${disputes}`;
 }

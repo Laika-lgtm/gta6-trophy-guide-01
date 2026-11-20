@@ -1,28 +1,19 @@
-// Progress store for the GTA VI trophy tracker.
-// Progress lives only in this browser (localStorage) — nothing is sent anywhere.
-// Shape: { earned: { [trophyId]: true }, hideEarned: bool, spoiler: bool, search: "", kind: "all", grade: "all" }
-const KEY = "gta6-trophy-guide-progress-v1";
+// Progress state: earned trophies + count-tracker values + view prefs.
+// Kept in localStorage only; export/import move the same JSON around.
+const KEY = "leonida-progress-v1";
 
-function blank() {
-  return {
-    earned: {},
-    hideEarned: false,
-    spoiler: false,
-    search: "",
-    kind: "all",
-    grade: "all",
-  };
+export function blankState() {
+  return { earned: {}, counters: {}, hideEarned: false, spoiler: false };
 }
 
 export function loadState() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return blank();
+    if (!raw) return blankState();
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return blank();
-    return { ...blank(), ...parsed, earned: parsed.earned || {} };
+    return { ...blankState(), ...parsed, earned: parsed.earned || {}, counters: parsed.counters || {} };
   } catch {
-    return blank();
+    return blankState();
   }
 }
 
@@ -30,69 +21,42 @@ export function saveState(state) {
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
-    // Storage full or blocked (private mode): progress just won't persist.
+    // Storage full or blocked — progress just won't persist this session.
   }
 }
 
-export function setEarned(state, id, earned) {
-  const next = { ...state, earned: { ...state.earned } };
-  if (earned) {
-    next.earned[id] = true;
-  } else {
-    delete next.earned[id];
-  }
-  saveState(next);
-  return next;
+// A realistic mid-game state for screenshots and demos (?demo=1).
+export function demoState() {
+  const state = blankState();
+  for (const id of [2, 3, 8, 9, 15, 16, 20, 21, 24, 33, 35, 36, 47]) state.earned[id] = true;
+  state.counters = {
+    meditations: 6, vehicles: 42, stunts: 87, waink: 34, cardsets: 1,
+    challenges: 12, rangeGolds: 5, droneTrials: 3, racesWon: 4, videogames: 2,
+  };
+  return state;
+}
+
+export function toggleEarned(state, id) {
+  if (state.earned[id]) delete state.earned[id];
+  else state.earned[id] = true;
+  saveState(state);
+}
+
+export function bumpCounter(state, id, delta) {
+  const cur = state.counters[id] || 0;
+  state.counters[id] = Math.max(0, cur + delta);
+  saveState(state);
+}
+
+export function setCounter(state, id, value) {
+  state.counters[id] = Math.max(0, Math.round(value) || 0);
+  saveState(state);
 }
 
 export function earnedCount(state) {
   return Object.keys(state.earned).length;
 }
 
-// Export: download the current progress as a JSON file. The format marker
-// lets import reject files that were never a progress export.
-export function exportState(state) {
-  const blob = new Blob(
-    [JSON.stringify({ format: "gta6-trophy-guide-progress-v1", ...state }, null, 2)],
-    { type: "application/json" },
-  );
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "gta6-trophy-progress.json";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-// Import: read a previously exported JSON file. Returns the parsed state
-// or throws a friendly error when the file is not a valid progress export.
-export async function importState(file) {
-  const text = await file.text();
-  const parsed = JSON.parse(text);
-  if (!parsed || typeof parsed !== "object" || typeof parsed.earned !== "object") {
-    throw new Error("That file is not a GTA VI trophy progress export.");
-  }
-  if (parsed.format && parsed.format !== "gta6-trophy-guide-progress-v1") {
-    throw new Error("That file is a different export format, not a trophy progress export.");
-  }
-  const state = { ...blank(), ...parsed, earned: {} };
-  for (const [id, value] of Object.entries(parsed.earned)) {
-    const n = Number(id);
-    if (Number.isInteger(n) && n >= 1 && n <= 55 && value === true) {
-      state.earned[n] = true;
-    }
-  }
-  saveState(state);
-  return state;
-}
-
-export function resetState() {
-  try {
-    localStorage.removeItem(KEY);
-  } catch {
-    // Nothing to remove.
-  }
-  return blank();
+export function loggedTotal(state) {
+  return Object.values(state.counters).reduce((a, b) => a + (b || 0), 0);
 }

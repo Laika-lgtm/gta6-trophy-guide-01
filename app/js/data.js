@@ -1,27 +1,48 @@
-// Data loading for the GTA VI trophy guide.
-// The app is static and offline once loaded: two JSON files under app/data/
-// carry every trophy, the roadmap, the source matrix and the disagreements.
-const DATA_DIR = new URL("../data/", import.meta.url);
-
-async function loadJson(name) {
-  const res = await fetch(new URL(name, DATA_DIR));
-  if (!res.ok) {
-    throw new Error(`Could not load ${name} (${res.status})`);
-  }
-  return res.json();
-}
+// Data loading: fetches this app's own JSON files, nothing else.
+// No network at runtime — every URL below is a relative path inside app/.
+const FILES = ["trophies", "sources", "roadmap", "missables", "disputes", "counts"];
 
 export async function loadData() {
-  const [trophiesDoc, meta] = await Promise.all([
-    loadJson("trophies.json"),
-    loadJson("meta.json"),
-  ]);
-  // The guide is only complete with all 55 trophies — fail loudly instead
-  // of rendering a partial list.
-  if (!Array.isArray(trophiesDoc.trophies) || trophiesDoc.trophies.length !== 55) {
-    throw new Error(
-      `Expected 55 trophies, got ${trophiesDoc.trophies?.length ?? 0}`,
-    );
+  const data = {};
+  for (const name of FILES) {
+    const res = await fetch(`data/${name}.json`);
+    if (!res.ok) throw new Error(`Could not load data/${name}.json`);
+    data[name] = await res.json();
   }
-  return { trophies: trophiesDoc.trophies, meta };
+  data.sourceById = new Map(data.sources.sources.map((s) => [s.n, s]));
+  data.trophyById = new Map(data.trophies.trophies.map((t) => [t.id, t]));
+  return data;
+}
+
+export function sourceName(data, n) {
+  const s = data.sourceById.get(n);
+  return s ? s.name : `Source ${n}`;
+}
+
+export function sourceUrl(data, n) {
+  const s = data.sourceById.get(n);
+  return s ? s.url : "";
+}
+
+export function sourceDomain(data, n) {
+  try {
+    return new URL(sourceUrl(data, n)).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+// Renders [1][7] style markers as small superscript links into the Sources tab.
+export function citeMarks(data, sources) {
+  return sources
+    .map((n) => `<sup class="cite"><a href="#sources" data-src="${n}">[${n}]</a></sup>`)
+    .join("");
+}
+
+export function esc(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
