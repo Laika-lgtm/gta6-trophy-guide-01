@@ -85,7 +85,7 @@ function renderDetail(data, state, t) {
   let html = `<h2>${hidden ? "Story trophy — hidden until earned" : esc(t.name)}</h2>`;
   html += `<p class="desc">${hidden ? "Spoiler-safe mode hides story trophies you have not earned yet. Earn it, or turn spoiler-safe off." : esc(t.description)}</p>`;
   html += `<div class="tags"><span class="pill ${t.grade}">${t.grade.toUpperCase()}</span>
-    <span class="muted">${KIND_LABEL[t.kind] || t.kind} · ${t.psnCount !== null && t.psnCount !== undefined ? `PSN: ${t.psnCount}% of players` : "no PSN rarity published"}</span>
+    <span class="muted">${KIND_LABEL[t.kind] || t.kind} · ${t.psnCount !== null && t.psnCount !== undefined ? `PSN tracks: ${t.psnCount}` : "no PSN count published"}</span>
     ${t.hidden ? '<span class="flag">HIDDEN TROPHY</span>' : ""}</div>`;
   if (t.missable) {
     html += `<div class="notice danger"><b>⚠ Possibly missable.</b> The Chapter 1 balcony meditation with Lucia may be the one step in the whole game that cannot be redone. Do it the morning after Down to Earth, then save. Whether it is actually required is still unconfirmed — see the Missables tab.</div>`;
@@ -122,9 +122,9 @@ export function renderRoadmap(data) {
     <h3>${esc(s.title)}</h3><div class="hours">${esc(s.hours)}</div>
     <ol>${s.steps.map((st) => `<li>${esc(st.text)} ${citeMarks(data, st.sources)}</li>`).join("")}</ol>
   </section>`).join("");
-  return `<h2>Roadmap — five stages, in order</h2>
+  return `<div class="roadmap-view"><h2>Roadmap — five stages, in order</h2>
   <p class="muted">Chapter 1 first, then the story, then the 100% checklist, then the stranger finales, then cleanup. Every step carries its sources.</p>
-  <div class="cards">${cards}</div>`;
+  <div class="cards">${cards}</div></div>`;
 }
 
 export function renderMissables(data) {
@@ -163,9 +163,17 @@ export function renderSources(data) {
     return `<tr><td class="rowh">${esc(t.name)}</td>${cells}<td class="c${Math.min(other, 3)}">${other || ""}</td></tr>`;
   }).join("");
 
+  // Sources cited anywhere (claims + roadmap + missables + disputes) — mirrors audit.js.
+  const citedAnywhere = new Set(usage.keys());
+  for (const s of data.roadmap.stages) for (const st of s.steps) for (const n of st.sources) citedAnywhere.add(n);
+  for (const r of data.missables.rows) for (const n of r.sources) citedAnywhere.add(n);
+  for (const d of data.disputes.disputes) for (const n of [...d.sideA.sources, ...d.sideB.sources, ...d.verdictSources]) citedAnywhere.add(n);
+
   const list = data.sources.sources.map((s) => {
     const used = usage.get(s.n) || 0;
-    return `<li id="src-${s.n}"><span class="num">[${s.n}]</span> <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a> <span class="muted">— ${esc(s.kind)}, read ${esc(data.sources.readDate)}${used ? `, cited in ${used} claim${used === 1 ? "" : "s"}` : ", cited in roadmap/disputes"}</span></li>`;
+    const citedNote = used ? `, cited in ${used} claim${used === 1 ? "" : "s"}` : citedAnywhere.has(s.n) ? ", cited in roadmap/disputes" : ", in the register, not cited in any guide";
+    const note = s.note ? ` — ${esc(s.note)}` : "";
+    return `<li id="src-${s.n}"><span class="num">[${s.n}]</span> <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a> <span class="muted">— ${esc(s.kind)}, read ${esc(data.sources.readDate)}${citedNote}${note}</span></li>`;
   }).join("");
 
   const disputes = data.disputes.disputes.map((d) => `<section class="dispute"><h4>${esc(d.id)} — ${esc(d.title)}</h4>
@@ -173,7 +181,7 @@ export function renderSources(data) {
     <div class="sideB"><b>Side B:</b> ${esc(d.sideB.text)} ${citeMarks(data, d.sideB.sources)}</div></div>
     <div class="verdict"><b>What this guide does:</b> ${esc(d.verdict)} ${citeMarks(data, d.verdictSources)}</div></section>`).join("");
 
-  return `<h2>Sources — ${data.sources.sources.length} read, numbered in the order they appear</h2>
+  return `<h2>Sources — ${data.sources.sources.length} in the register, ${citedAnywhere.size} cited, numbered in the order they appear</h2>
   <div class="srcwrap">
     <div><ol class="srclist-full">${list}</ol></div>
     <div class="heatmap"><b>Trophy × source heatmap</b>

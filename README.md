@@ -2,7 +2,7 @@
 ![Rank](https://make.fun/badge/gta6-trophy-guide-01/Laika-lgtm/gta6-trophy-guide-01/rank.svg)
 ![Reward](https://make.fun/badge/gta6-trophy-guide-01/Laika-lgtm/gta6-trophy-guide-01/reward.svg)
 
-# LEONIDA Trophy Guide: 55 trophies, 263 cited claims, 166 backed by 2+ sources, 30 sources read, count trackers, chapter missable grid
+# LEONIDA Trophy Guide: 55 trophies, 263 cited claims, 165 backed by 2+ sources, 29 sources read, count trackers, chapter missable grid
 
 A complete, offline, fully sourced trophy guide for Grand Theft Auto VI on PlayStation 5 — every trophy with its own guide, a five-stage roadmap to the platinum, a chapter-by-chapter missables grid, 30 interactive count trackers, and a Sources tab that shows every citation, a trophy × source heatmap, and 24 disputes where the guides disagree.
 
@@ -17,8 +17,8 @@ Competition: https://make.fun/bounty/gta6-trophy-guide-01
 
 ## Audit (computed from the data files, not typed by hand)
 
-- 263 claims cited, 166 of them backed by 2+ sources
-- 30 sources cited, across 22 sites
+- 263 claims cited, 165 of them backed by 2+ sources
+- 29 sources cited, across 21 sites
 - 24 disputes on record
 - 1 possibly missable trophy (Positive Mental Attitude), 3 at-risk watch items
 - 9 methods still unconfirmed (shown as reported, never as settled)

@@ -53,7 +53,7 @@ export function computeAudit(data, state) {
 export function auditStripHtml(a) {
   return (
     `<b>${a.claims} claims cited</b> · <b>${a.twoPlus}</b> backed by 2+ sources · ` +
-    `<b>${a.pages} sources</b> read across <b>${a.sites} sites</b> · ` +
+    `<b>${a.pages} sources</b> cited across <b>${a.sites} sites</b> · ` +
     `<b>${a.disputes} disputes</b> on record · ` +
     `<span class="warn">${a.missable} possibly missable</span> · ` +
     `<span class="warn">${a.atRisk} at-risk watch items</span> · ` +

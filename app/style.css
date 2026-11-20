@@ -75,11 +75,14 @@ sup.cite{color:#b45500;font-weight:700;font-size:10px}
 .counter .cbtns{display:flex;gap:4px;align-items:center}
 .counter button{width:22px;height:22px;padding:0;border:1px solid #c9c2c2;border-radius:3px;background:#f5f1e8;font-weight:800;line-height:1}
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.card{border:1px solid #d8d3c8;background:#fff;border-radius:6px;padding:10px 12px}
+.card{border:1px solid #d8d3c8;background:#fff;border-radius:6px;padding:8px 10px}
 .card h3{margin:0 0 4px}
 .card .hours{font-size:11px;color:#6b6478;font-weight:700}
 .card ol{margin:6px 0 0;padding-left:18px}
-.card li{margin:3px 0;font-size:12.5px}
+.card li{margin:2px 0;font-size:12px;line-height:1.4}
+.roadmap-view{margin-top:-10px}
+.roadmap-view h2{margin:2px 0 4px}
+.roadmap-view p.muted{margin:2px 0 8px}
 .gridtable{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
 .gridtable th,.gridtable td{border:1px solid #d8d3c8;padding:6px 8px;text-align:left;vertical-align:top}
 .gridtable th{background:#e9e4da}
