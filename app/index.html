@@ -3,83 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LEONIDA — GTA VI Trophy Guide &amp; Tracker</title>
-<link rel="stylesheet" href="style.css">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23ff2d78'/%3E%3Ctext x='16' y='22' font-size='18' font-family='Arial' font-weight='bold' text-anchor='middle' fill='white'%3EL%3C/text%3E%3C/svg%3E">
+<title>LEONIDA Trophy Guide — All 55 GTA VI Trophies, Sourced</title>
+<meta name="description" content="Offline guide and tracker for all 55 Grand Theft Auto VI trophies on PlayStation 5: numbered steps with a citation per step, a platinum roadmap, a source matrix, disagreements, and an audit.">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header id="top" class="hero">
-  <p class="eyebrow">Grand Theft Auto VI &middot; PlayStation 5 &middot; 55 trophies</p>
-  <h1>LEONIDA <span>Trophy Guide</span></h1>
-  <p class="lede">Every trophy, a guide in plain words with its sources, a roadmap to the platinum, and a tracker that remembers what you earned. Works fully offline.</p>
-  <div id="progressCard" class="progress-card">
-    <div class="progress-number"><span id="earnedCount">0</span><span class="progress-total"> / 55 earned</span></div>
-    <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-    <p id="gradeCounts" class="grade-counts">0 platinum &middot; 0 gold &middot; 0 silver &middot; 0 bronze</p>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">L</span>
+    <div>
+      <h1>LEONIDA Trophy Guide</h1>
+      <p class="tagline">All 55 GTA VI trophies — every step cited, every claim checked.</p>
+    </div>
   </div>
+  <div class="header-facts" id="headerFacts"></div>
 </header>
-
-<section id="missableBanner" class="missable-banner">
-  <strong>&#9888; One trophy can be missed.</strong>
-  <span><strong>Positive Mental Attitude</strong> — the first meditation, at Jason&rsquo;s house, is only available in Chapter 1. After the mission Down to Earth, talk to Lucia in the kitchen in the morning, follow her to the balcony and choose Accept. Do it before Chapter 1 ends.</span>
-</section>
-
-<section id="roadmap" class="roadmap">
-  <h2>Roadmap to the platinum <span class="roadmap-time">~200 hours &middot; PowerPyx</span></h2>
-  <div class="stages">
-    <article class="stage">
-      <h3>Stage 1 &mdash; Play the story</h3>
-      <p class="stage-time">60&ndash;80 hours</p>
-      <p>Chapters 1&ndash;5, just enjoy it. Do the Chapter 1 meditation, start stranger chains as they unlock, scan vehicles with the WAiNK app and study animals with binoculars as you go. Progress toward 100% already counts.</p>
-      <p class="stage-yield">Yields: 13 story trophies + most side chains started</p>
-    </article>
-    <article class="stage">
-      <h3>Stage 2 &mdash; 100% completion checklist</h3>
-      <p class="stage-time">~100 hours</p>
-      <p>After the story, open Progress &gt; Stats &gt; 100% Completion. It is far more forgiving than it sounds &mdash; about 60% true completion: any 70 of 80 challenges, 200 of 277 vehicles, 100 of 255 animals, 300 stunts, all robberies, ranges, drone races and Bret&rsquo;s quests.</p>
-      <p class="stage-yield">Yields: A Long Road (gold) + most of the list</p>
-    </article>
-    <article class="stage">
-      <h3>Stage 3 &mdash; Cleanup</h3>
-      <p class="stage-time">~10 hours</p>
-      <p>Finish the 8 Strangers &amp; Freaks strands and whatever is left: the UFO easter egg, the unconfirmed Bad Luck, I Guess (check the sources for updates), and any stray collectibles. Then the platinum pops.</p>
-      <p class="stage-yield">Yields: the last trophies + Vice Got a Price!</p>
-    </article>
-  </div>
-  <p class="cheats-note">Cheats disable trophies and saving &mdash; keep them off for the whole run. There is free-roam after the story but no mission replay, so keep a save at the start and end of each chapter.</p>
-</section>
-
-<div id="controls" class="controls">
-  <input id="searchBox" type="search" placeholder="Search trophies, guides, places&hellip;" aria-label="Search trophies">
-  <div id="kindChips" class="chips" role="group" aria-label="Filter by kind"></div>
-  <label class="control-label">Grade
-    <select id="gradeFilter">
-      <option value="all">All grades</option>
-      <option value="platinum">Platinum</option>
-      <option value="gold">Gold</option>
-      <option value="silver">Silver</option>
-      <option value="bronze">Bronze</option>
-    </select>
-  </label>
-  <label class="control-check"><input id="hideEarned" type="checkbox"> Hide earned</label>
-  <label class="control-check"><input id="hideSpoilers" type="checkbox"> Hide story spoilers</label>
-  <button id="exportBtn" type="button" class="action-btn">Export progress</button>
-  <button id="importBtn" type="button" class="action-btn secondary">Import progress</button>
-  <input id="importFile" type="file" accept="application/json,.json" hidden>
-  <button id="resetBtn" type="button" class="action-btn secondary">Reset</button>
-  <span id="showingCount" class="showing-count" aria-live="polite"></span>
-</div>
-
-<main>
-  <p id="listStatus" class="list-status" aria-live="polite">Showing all 55 trophies.</p>
-  <div id="trophyGrid" class="trophy-grid"></div>
-</main>
-
-<footer id="about" class="about">
-  <p>List (names, descriptions, grades) as PlayStation publishes it, via Exophase and PSNProfiles. Guides are original writing for this project, with sources cited beside each one &mdash; PowerPyx, Push Square, KeenGamer and GTASpotter. One trophy (Bad Luck, I Guess) is still unconfirmed by every published guide; its entry says so instead of inventing a method.</p>
-  <p>Sources are named and linked beside each guide. Links open only when you follow them; this app fetches nothing. No Rockstar artwork, logos or game screenshots are used anywhere in this guide.</p>
+<nav class="mainnav" aria-label="Sections">
+  <a href="#/tracker" data-route="tracker">Tracker</a>
+  <a href="#/roadmap" data-route="roadmap">Roadmap</a>
+  <a href="#/sources" data-route="sources">Sources &amp; Audit</a>
+  <a href="#/missables" data-route="missables">Missables</a>
+</nav>
+<main id="view" aria-live="polite"></main>
+<noscript><p style="max-width:1180px;margin:0 auto;padding:18px 22px">This guide needs JavaScript: the tracker, filters and spoiler mode run in your browser, and the trophy data loads from the app's own files. Nothing is fetched from the network.</p></noscript>
+<footer class="pagefoot">
+  <p>Sources read 20 Nov 2026. Names, descriptions and grades are PlayStation's official list, verified against Exophase and PSNProfiles. Guide text is original, written for this guide; each step names its source. Works fully offline — no network requests. No Rockstar Games logo or official artwork is used.</p>
+  <p>LEONIDA Trophy Guide is an independent, fan-made tracker. Grand Theft Auto and GTA are trademarks of Take-Two Interactive; this guide is not affiliated with or endorsed by Rockstar Games.</p>
 </footer>
-
-<script type="module" src="app.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>
