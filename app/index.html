@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leonida Trophy Guide — GTA VI (PS5)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff2e88'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-weight='bold'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="top">
+  <div class="title-block">
+    <p class="kicker">Grand Theft Auto VI &middot; PlayStation 5 &middot; 55 trophies</p>
+    <h1>LEONIDA <span>Trophy Guide</span></h1>
+    <p class="sub">Every trophy, a guide in plain words with its sources, a roadmap to the
+    platinum, and a tracker that remembers what you earned. Works fully offline.</p>
+  </div>
+  <div class="progress-card" id="progress-card">
+    <div class="progress-numbers"><strong id="earned-count">0</strong><span> / 55 earned</span></div>
+    <div class="progress-bar"><div id="progress-fill"></div></div>
+    <p class="progress-detail" id="progress-detail">0 platinum &middot; 0 gold &middot; 0 silver &middot; 0 bronze</p>
+    <p class="progress-note">All 55 trophies are offline single-player. No online trophies, no difficulty settings, one playthrough is enough.</p>
+  </div>
+</header>
+
+<section class="missable-banner" id="missable-banner">
+  <strong>&#9888; One trophy can be missed.</strong>
+  <span><b>Positive Mental Attitude</b> — one meditation in Chapter 1, on the balcony
+  of Jason&rsquo;s house, disappears after the chapter ends. Do it when Lucia offers,
+  in the morning after <i>Down to Earth</i>. Everything else can be finished in free-roam after the story.</span>
+</section>
+
+<section class="roadmap" id="roadmap">
+  <h2>Roadmap to the platinum <span class="roadmap-time">~200 hours &middot; PowerPyx</span></h2>
+  <div class="stages">
+    <article class="stage">
+      <h3>Stage 1 &mdash; Play the story</h3>
+      <p class="stage-time">60&ndash;80 hours</p>
+      <p>Chapters 1&ndash;5, just enjoy it. Do the Chapter 1 meditation, start stranger
+      chains as they unlock, scan vehicles with the WAiNK app and study animals with
+      binoculars as you go. Progress toward 100% already counts.</p>
+      <p class="stage-yields">Yields: 13 story trophies + most side chains started</p>
+    </article>
+    <article class="stage">
+      <h3>Stage 2 &mdash; 100% completion checklist</h3>
+      <p class="stage-time">~100 hours</p>
+      <p>After the story, open Progress &gt; Stats &gt; 100% Completion. It is far more
+      forgiving than it sounds — about 60% true completion: any 70 of 80 challenges,
+      200 of 277 vehicles, 100 of 255 animals, 300 stunts, all robberies, ranges,
+      drone races and Bret&rsquo;s quests.</p>
+      <p class="stage-yields">Yields: A Long Road (gold) + most of the list</p>
+    </article>
+    <article class="stage">
+      <h3>Stage 3 &mdash; Cleanup</h3>
+      <p class="stage-time">~10 hours</p>
+      <p>Finish the 8 Strangers &amp; Freaks strands and whatever is left: the UFO easter
+      egg, the unconfirmed <i>Bad Luck, I Guess</i> (check the sources for updates),
+      and any stray collectibles. Then the platinum pops.</p>
+      <p class="stage-yields">Yields: the last trophies + Vice Got a Price!</p>
+    </article>
+  </div>
+  <p class="roadmap-note">Cheats disable trophies and saving — keep them off for the whole run. There is
+  free-roam after the story but no mission replay, so keep a save at the start and end of each chapter.</p>
+</section>
+
+<div class="controls" id="controls">
+  <input id="search" type="search" placeholder="Search trophies, guides, places&hellip;" aria-label="Search trophies">
+  <div class="chips" id="kind-chips" role="group" aria-label="Filter by kind"></div>
+  <label class="ctl">Grade
+    <select id="grade-filter">
+      <option value="all">All grades</option>
+      <option value="platinum">Platinum</option>
+      <option value="gold">Gold</option>
+      <option value="silver">Silver</option>
+      <option value="bronze">Bronze</option>
+    </select>
+  </label>
+  <label class="ctl check"><input type="checkbox" id="hide-earned"> Hide earned</label>
+  <label class="ctl check"><input type="checkbox" id="spoiler-toggle"> Hide story spoilers</label>
+  <button id="export-btn" type="button">Export progress</button>
+  <label class="import-btn">Import progress <input id="import-file" type="file" accept="application/json,.json"></label>
+  <button id="reset-btn" type="button">Reset</button>
+  <span class="controls-progress" id="controls-progress">0 / 55 earned</span>
+</div>
+
+<p class="result-line" id="result-line"></p>
+<main id="trophy-list" aria-live="polite"></main>
+
+<footer>
+  <p>List (names, descriptions, grades) as PlayStation publishes it, via Exophase and
+  PSNProfiles. Guides are original writing for this project, with sources cited beside
+  each one — PowerPyx, Push Square, KeenGamer, GamesFuze, GTAScoop, Insider Gaming,
+  EGamers and CryptoGames. One trophy (<i>Bad Luck, I Guess</i>) is still unconfirmed
+  by every published guide; its entry says so instead of inventing a method.</p>
+  <p class="sources-note">Sources are named and linked beside each guide. Links open only when you
+  follow them; this app fetches nothing. No Rockstar artwork, logos or game screenshots
+  are used anywhere in this guide.</p>
+</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>
