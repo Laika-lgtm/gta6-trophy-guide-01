@@ -40,7 +40,7 @@ function stepsHtml(trophy, meta) {
   const items = trophy.steps
     .map(
       (step, i) =>
-        "<li><b>Step " + (i + 1) + ".</b> " + escapeHtml(step.text) +
+        "<li>" + escapeHtml(step.text) +
         ' <span class="cite">— Source: ' + sourceLink(meta, step.source) + "</span></li>"
     )
     .join("");
