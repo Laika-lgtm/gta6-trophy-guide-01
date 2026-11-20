@@ -1,6 +1,6 @@
-![Competition](https://make.fun/badge/gta6-trophy-guide-01.svg)
-![Rank](https://make.fun/badge/gta6-trophy-guide-01/Laika-lgtm/gta6-trophy-guide-01/rank.svg)
-![Reward](https://make.fun/badge/gta6-trophy-guide-01/Laika-lgtm/gta6-trophy-guide-01/reward.svg)
+[![make.fun · gta6-trophy-guide-01](https://make.fun/badge/gta6-trophy-guide-01.svg)](https://make.fun/bounty/gta6-trophy-guide-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
+[![rank](https://make.fun/badge/gta6-trophy-guide-01/Laika-lgtm/gta6-trophy-guide-01/rank.svg)](https://make.fun/bounty/gta6-trophy-guide-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
+[![reward](https://make.fun/badge/gta6-trophy-guide-01/Laika-lgtm/gta6-trophy-guide-01/reward.svg)](https://make.fun/bounty/gta6-trophy-guide-01?utm_source=github&utm_medium=readme&utm_campaign=gta6-trophy-guide-01)
 
 # LEONIDA Trophy Guide: 55 trophies, 263 cited claims, 165 backed by 2+ sources, 29 sources read, count trackers, chapter missable grid
 
@@ -13,7 +13,7 @@ Competition: https://make.fun/bounty/gta6-trophy-guide-01
 - **Tracker** — all 55 trophies (names, descriptions and grades exactly as PlayStation lists them) with a checkbox per trophy, kind/grade filters, search, hide-earned, and a spoiler-safe mode that hides un-earned story trophies. Each trophy opens a guide written in this entry's own words, every step cited `[n]` to the Sources tab.
 - **Roadmap** — five stages in order: Chapter 1, the story, the 100% Completion Checklist, the Strangers & Freaks finales, then cleanup and the platinum. Every step carries its sources.
 - **Missables** — a chapter grid (Chapter 1–5 + Post) of the watch items, story gates showing where each trophy pops, and the one possibly missable step (the Chapter 1 balcony meditation) flagged clearly.
-- **Sources & Disputes** — 43 sources read 20–21 Nov 2026, a trophy × source heatmap, and 24 disputes with both sides shown and this guide's call on each.
+- **Sources & Disputes** — 43 sources in the register, 29 cited, read 20–21 Nov 2026, a trophy × source heatmap, and 24 disputes with both sides shown and this guide's call on each.
 
 ## Audit (computed from the data files, not typed by hand)
 
