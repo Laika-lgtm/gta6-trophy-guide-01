@@ -1,76 +1,98 @@
-// Progress store: earned trophies, spoiler and filter settings in localStorage,
-// plus export / import / reset. Nothing leaves the browser.
-export const STORAGE_KEY = "leonida-trophy-guide-v2";
-export const DEMO_EARNED_IDS = [2, 3, 4, 8, 15, 16, 20, 21, 28, 32, 35, 42, 44];
+// Progress store for the GTA VI trophy tracker.
+// Progress lives only in this browser (localStorage) — nothing is sent anywhere.
+// Shape: { earned: { [trophyId]: true }, hideEarned: bool, spoiler: bool, search: "", kind: "all", grade: "all" }
+const KEY = "gta6-trophy-guide-progress-v1";
 
-export function defaultProgress() {
-  return { earned: [], spoiler: true, hideEarned: false, kind: "all", grade: "all", query: "" };
+function blank() {
+  return {
+    earned: {},
+    hideEarned: false,
+    spoiler: false,
+    search: "",
+    kind: "all",
+    grade: "all",
+  };
 }
 
-export function loadProgress() {
+export function loadState() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultProgress();
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return blank();
     const parsed = JSON.parse(raw);
-    const base = defaultProgress();
-    return {
-      earned: Array.isArray(parsed.earned) ? [...new Set(parsed.earned.filter((n) => Number.isInteger(n)))] : base.earned,
-      spoiler: typeof parsed.spoiler === "boolean" ? parsed.spoiler : base.spoiler,
-      hideEarned: typeof parsed.hideEarned === "boolean" ? parsed.hideEarned : base.hideEarned,
-      kind: typeof parsed.kind === "string" ? parsed.kind : base.kind,
-      grade: typeof parsed.grade === "string" ? parsed.grade : base.grade,
-      query: "",
-    };
-  } catch (err) {
-    return defaultProgress();
+    if (!parsed || typeof parsed !== "object") return blank();
+    return { ...blank(), ...parsed, earned: parsed.earned || {} };
+  } catch {
+    return blank();
   }
 }
 
-export function saveProgress(progress) {
-  const toSave = {
-    earned: progress.earned,
-    spoiler: progress.spoiler,
-    hideEarned: progress.hideEarned,
-    kind: progress.kind,
-    grade: progress.grade,
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+export function saveState(state) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch {
+    // Storage full or blocked (private mode): progress just won't persist.
+  }
 }
 
-export function seedDemoProgress() {
-  const progress = defaultProgress();
-  progress.earned = DEMO_EARNED_IDS.slice();
-  progress.spoiler = false;
-  saveProgress(progress);
-  return progress;
+export function setEarned(state, id, earned) {
+  const next = { ...state, earned: { ...state.earned } };
+  if (earned) {
+    next.earned[id] = true;
+  } else {
+    delete next.earned[id];
+  }
+  saveState(next);
+  return next;
 }
 
-export function isDemoSeeded() {
-  return new URLSearchParams(window.location.search).has("demo");
+export function earnedCount(state) {
+  return Object.keys(state.earned).length;
 }
 
-export function exportProgressFile(progress) {
-  const payload = { app: "LEONIDA Trophy Guide", version: 2, exportedAt: new Date().toISOString(), earned: progress.earned };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+// Export: download the current progress as a JSON file. The format marker
+// lets import reject files that were never a progress export.
+export function exportState(state) {
+  const blob = new Blob(
+    [JSON.stringify({ format: "gta6-trophy-guide-progress-v1", ...state }, null, 2)],
+    { type: "application/json" },
+  );
   const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "leonida-trophy-progress.json";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "gta6-trophy-progress.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function parseImportedProgress(text) {
+// Import: read a previously exported JSON file. Returns the parsed state
+// or throws a friendly error when the file is not a valid progress export.
+export async function importState(file) {
+  const text = await file.text();
   const parsed = JSON.parse(text);
-  const earned = Array.isArray(parsed.earned) ? parsed.earned : parsed;
-  if (!Array.isArray(earned)) throw new Error("No earned list found in file.");
-  const ids = earned.filter((n) => Number.isInteger(n) && n >= 1 && n <= 55);
-  return ids;
+  if (!parsed || typeof parsed !== "object" || typeof parsed.earned !== "object") {
+    throw new Error("That file is not a GTA VI trophy progress export.");
+  }
+  if (parsed.format && parsed.format !== "gta6-trophy-guide-progress-v1") {
+    throw new Error("That file is a different export format, not a trophy progress export.");
+  }
+  const state = { ...blank(), ...parsed, earned: {} };
+  for (const [id, value] of Object.entries(parsed.earned)) {
+    const n = Number(id);
+    if (Number.isInteger(n) && n >= 1 && n <= 55 && value === true) {
+      state.earned[n] = true;
+    }
+  }
+  saveState(state);
+  return state;
 }
 
-export function resetProgress() {
-  localStorage.removeItem(STORAGE_KEY);
-  return defaultProgress();
+export function resetState() {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    // Nothing to remove.
+  }
+  return blank();
 }

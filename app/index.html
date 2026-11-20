@@ -1,35 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LEONIDA Trophy Guide — All 55 GTA VI Trophies, Sourced</title>
-<meta name="description" content="Offline guide and tracker for all 55 Grand Theft Auto VI trophies on PlayStation 5: numbered steps with a citation per step, a platinum roadmap, a source matrix, disagreements, and an audit.">
+<meta name="theme-color" content="#f6f3ee">
+<title>GTA VI Trophy Guide &amp; Tracker — All 55 Trophies</title>
+<meta name="description" content="A complete GTA VI trophy guide with a numbered, cited method for every one of the 55 trophies, a 3-stage roadmap to the platinum, a source matrix, and an offline progress tracker.">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header class="topbar">
-  <div class="brand">
-    <span class="brand-mark" aria-hidden="true">L</span>
-    <div>
-      <h1>LEONIDA Trophy Guide</h1>
-      <p class="tagline">All 55 GTA VI trophies — every step cited, every claim checked.</p>
+<a class="skip-link" href="#trophy-list">Skip to trophy list</a>
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Grand Theft Auto VI · PlayStation 5 · Trophy guide &amp; tracker</p>
+    <h1>GTA VI: All 55 Trophies</h1>
+    <p class="lede">Every trophy has a numbered method, and every step names its source. One platinum, 2 gold, 6 silver, 46 bronze — 28 hidden, 0 online, exactly 1 missable, and 1 method still unconfirmed (we say so instead of inventing one).</p>
+    <div class="stats" id="stats" aria-label="Trophy counts">
+      <span class="stat"><strong>55</strong> trophies</span>
+      <span class="stat"><strong>1</strong> platinum</span>
+      <span class="stat"><strong>2</strong> gold</span>
+      <span class="stat"><strong>6</strong> silver</span>
+      <span class="stat"><strong>46</strong> bronze</span>
+      <span class="stat"><strong>28</strong> hidden</span>
+      <span class="stat"><strong>0</strong> online</span>
+      <span class="stat"><strong>4/10</strong> difficulty</span>
+      <span class="stat"><strong>~200h</strong> to platinum</span>
     </div>
+    <div class="progress" role="status" aria-label="Your progress">
+      <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+      <p id="progress-text">0 / 55 earned — 0%</p>
+    </div>
+    <p class="sources-note">Sources read 20 Nov 2026 · PowerPyx (primary) cross-checked against KeenGamer, Push Square, GamesFuze, GTASpotter, Insider Gaming, EGamers and CryptoGames; official list via Exophase and PSNProfiles.</p>
   </div>
-  <div class="header-facts" id="headerFacts"></div>
 </header>
-<nav class="mainnav" aria-label="Sections">
-  <a href="#/tracker" data-route="tracker">Tracker</a>
-  <a href="#/roadmap" data-route="roadmap">Roadmap</a>
-  <a href="#/sources" data-route="sources">Sources &amp; Audit</a>
-  <a href="#/missables" data-route="missables">Missables</a>
+
+<nav class="tabs wrap" aria-label="Views">
+  <button class="tab active" data-view="checklist" type="button">Checklist</button>
+  <button class="tab" data-view="roadmap" type="button">Roadmap</button>
+  <button class="tab" data-view="sources" type="button">Sources</button>
+  <button class="tab" data-view="audit" type="button">Audit</button>
 </nav>
-<main id="view" aria-live="polite"></main>
-<noscript><p style="max-width:1180px;margin:0 auto;padding:18px 22px">This guide needs JavaScript: the tracker, filters and spoiler mode run in your browser, and the trophy data loads from the app's own files. Nothing is fetched from the network.</p></noscript>
-<footer class="pagefoot">
-  <p>Sources read 20 Nov 2026. Names, descriptions and grades are PlayStation's official list, verified against Exophase and PSNProfiles. Guide text is original, written for this guide; each step names its source. Works fully offline — no network requests. No Rockstar Games logo or official artwork is used.</p>
-  <p>LEONIDA Trophy Guide is an independent, fan-made tracker. Grand Theft Auto and GTA are trademarks of Take-Two Interactive; this guide is not affiliated with or endorsed by Rockstar Games.</p>
+
+<main class="wrap">
+  <section id="view-checklist" class="view active" aria-label="Trophy checklist">
+    <div class="toolbar">
+      <label class="search">Search trophies
+        <input id="search" type="search" placeholder="Search name or description…" autocomplete="off">
+      </label>
+      <fieldset class="chips" id="kind-chips" aria-label="Filter by kind">
+        <legend>Kind</legend>
+        <button type="button" class="chip active" data-kind="all">All</button>
+        <button type="button" class="chip" data-kind="story">Story</button>
+        <button type="button" class="chip" data-kind="side">Side</button>
+        <button type="button" class="chip" data-kind="collectibles">Collectibles</button>
+        <button type="button" class="chip" data-kind="activities">Activities</button>
+        <button type="button" class="chip" data-kind="crime">Crime</button>
+        <button type="button" class="chip" data-kind="exploration">Exploration</button>
+      </fieldset>
+      <fieldset class="chips" id="grade-chips" aria-label="Filter by grade">
+        <legend>Grade</legend>
+        <button type="button" class="chip active" data-grade="all">All</button>
+        <button type="button" class="chip" data-grade="platinum">Platinum</button>
+        <button type="button" class="chip" data-grade="gold">Gold</button>
+        <button type="button" class="chip" data-grade="silver">Silver</button>
+        <button type="button" class="chip" data-grade="bronze">Bronze</button>
+      </fieldset>
+      <div class="toggles">
+        <label><input id="hide-earned" type="checkbox"> Hide earned</label>
+        <label><input id="spoiler" type="checkbox"> Spoiler mode</label>
+      </div>
+      <div class="data-tools">
+        <button id="export-btn" type="button">Export progress</button>
+        <label class="import-label">Import progress <input id="import-file" type="file" accept="application/json,.json" hidden></label>
+        <button id="reset-btn" type="button">Reset progress</button>
+      </div>
+    </div>
+    <p id="result-count" class="result-count" aria-live="polite"></p>
+    <div id="trophy-list" class="trophy-list"></div>
+    <p id="empty-state" class="empty-state" hidden>No trophies match your filters. Clear the search or pick another kind or grade.</p>
+  </section>
+
+  <section id="view-roadmap" class="view" aria-label="Roadmap to the platinum" hidden>
+    <h2>The road to the platinum</h2>
+    <p class="intro">Three stages, about 200 hours. One playthrough, no mission replay, 15 manual save slots, and cheats disable trophies and saving — so save often and never cheat on a run you care about.</p>
+    <div id="roadmap"></div>
+    <h3>The 100% checklist (what A Long Road actually needs)</h3>
+    <p class="intro">The in-game checklist is closer to 60% of everything in the game — nothing on it is missable. Source: KeenGamer 100% checklist.</p>
+    <div id="checklist100"></div>
+  </section>
+
+  <section id="view-sources" class="view" aria-label="Source matrix and disagreements" hidden>
+    <h2>Source matrix</h2>
+    <p class="intro">Ten sources, read 20 Nov 2026. “List” is how many of the 55 trophies the source names; “Methods” is how many it gives a how-to for. PowerPyx is the primary method source; everything else is a cross-check.</p>
+    <div class="table-scroll"><table id="source-table">
+      <thead><tr><th>Source</th><th>List</th><th>Methods</th><th>What it adds</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <h2>Where the sources disagree</h2>
+    <p class="intro">Six real disagreements. We don't hide them — the guide tells you which side it follows and why.</p>
+    <div id="disagreements"></div>
+  </section>
+
+  <section id="view-audit" class="view" aria-label="Audit" hidden>
+    <h2>Audit</h2>
+    <p class="intro">Checks run against the guide data itself, so anyone can verify the claims on this page.</p>
+    <div id="audit"></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Unofficial fan guide. Grand Theft Auto, GTA and GTA VI are trademarks of Take-Two Interactive / Rockstar Games. This site is not affiliated with or endorsed by them. Methods were researched from public guides and cross-checked; where a method is unconfirmed the guide says so.</p>
+  <p>Data: trophies.json + meta.json · Sources read 20 Nov 2026 · Works fully offline once loaded.</p>
 </footer>
+
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
