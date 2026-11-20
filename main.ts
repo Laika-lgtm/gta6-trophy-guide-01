@@ -1,34 +1,38 @@
-// LEONIDA Trophy Guide — entry hand-in for gta6-trophy-guide-01 (Node 22, standard library only).
+// LEONIDA Trophy Guide — hand-in program for gta6-trophy-guide-01.
 //
-// What this program does, in order:
-//   1. Finds the app/ folder and the screenshots/ folder sitting next to this file.
-//   2. Copies both into the output directory (MAKEFUN_OUTPUT_DIR, or /output inside the grader).
-//   3. Writes /output/dossier.json with the make.fun library — the summary the judge reads:
-//      the screenshots, the first load's files and bytes, and the app's source.
-// The app itself is plain static files: app/index.html, ES modules under app/js/, one
-// stylesheet, and JSON data under app/data/. It loads nothing over the network at runtime.
+// Runs on plain Node (standard library only) and does three things:
+//   1. Locates the app/ and screenshots/ folders next to this file.
+//   2. Copies them into the output directory (MAKEFUN_OUTPUT_DIR, or /output
+//      when the grader runs it).
+//   3. Writes dossier.json there with the kit's make.fun library, which is
+//      the summary the judge reads: the screenshots, the first load's files
+//      and bytes, and the app's own source.
 //
-// The scorer's caps, from the competition's gate: the dossier text may be at most 163840 bytes;
-// at most 4 screenshots, each at most 262144 bytes; app/ may hold at most 993 files and
-// directories and at most 50331648 bytes. Those caps are passed straight through below, so
-// this program refuses an entry the scorer would refuse.
+// The guide itself is static files only — app/index.html, ES modules under
+// app/js/, one stylesheet, JSON data under app/data/. At runtime it loads
+// nothing from the network; it only fetches its own data files.
 //
-// vendor/makefun-frontend.ts is the kit's library, copied unchanged. The scorer requires
-// dossier.json to be byte-for-byte what its own copy of the library writes, so this file
-// never re-implements any of that logic — it only calls buildDossier.
+// Scorer caps, taken from the competition gate: dossier text at most 163840
+// bytes; at most 4 screenshots, each at most 262144 bytes; app/ at most 993
+// files and directories and at most 50331648 bytes. They are passed through
+// below, so this program refuses an entry the scorer would refuse.
+//
+// vendor/makefun-frontend.ts is the kit library, copied unchanged. The scorer
+// needs dossier.json to be exactly what its own copy of that library writes,
+// so this file never re-implements that logic — it only calls buildDossier.
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-frontend.ts';
 
-// The folder this file lives in; the app and screenshots live beside it.
+// The directory this file sits in; app/ and screenshots/ sit beside it.
 function repoRoot() {
   return fileURLToPath(new URL('.', import.meta.url));
 }
 
-// Where the finished entry goes. Outside the grader's container the environment
-// variable stands in for /output:
+// Destination for the finished entry. Outside the grader's container the
+// environment variable stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 function outputDir() {
   return process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
